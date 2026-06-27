@@ -26,15 +26,7 @@
 <div class="calculator-card">
     <h2>Kalkulator NAV GO ✨</h2>
     <div class="subtitle">Custom Order Calculator • 🏡 Jaktim</div>
-    <div class="form-group">
-        <label for="customerName">Nama Customer (Opsional)</label>
-        <input type="text" id="customerName" placeholder="Contoh: Winter">
-    </div>
-    <div class="form-group">
-        <label for="itemName">Nama Barang (Opsional)</label>
-        <input type="text" id="itemName" placeholder="Contoh: Album Version A">
-    </div>
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+    
     <div class="form-group">
         <label for="currency">Mata Uang Asal</label>
         <select id="currency" onchange="updateDefaultRate()">
@@ -44,59 +36,68 @@
             <option value="THB">THB (Thailand - ฿)</option>
         </select>
     </div>
+    
     <div class="form-group">
         <label for="price">Harga Barang (Mata Uang Asing)</label>
         <input type="number" id="price" placeholder="Contoh: 15000" min="0">
     </div>
+    
     <div class="form-group">
         <label for="rate">Rate Kurs ke IDR (1 Mata Uang = ... IDR)</label>
         <input type="number" id="rate" value="12.8" step="0.01">
     </div>
+    
     <div class="form-group">
         <label for="goFee">Fee Jasa GO (IDR)</label>
-        <input type="number" id="goFee" value="5000" min="0">
+        <input type="number" id="goFee" value="15000" min="0">
     </div>
-    <div class="form-group">
-        <label for="shipping">Estimasi EMS / Tax (IDR)</label>
-        <input type="number" id="shipping" value="0" min="0">
-    </div>
+    
     <button onclick="hitungTotal()">Hitung & Buat Rincian</button>
+    
     <div class="result-box" id="resultBox">
-        <div class="result-header" id="resHeader">RINCIAN PESANAN</div>
-        <div class="result-item"><span>Item:</span><span id="resItemName" style="font-weight:600;">-</span></div>
+        <div class="result-header">RINCIAN PESANAN</div>
         <div class="result-item"><span>Harga Konversi:</span><span id="resRawPrice">Rp 0</span></div>
         <div class="result-item"><span>Fee GO:</span><span id="resFee">Rp 0</span></div>
-        <div class="result-item"><span>EMS / Tax:</span><span id="resShipping">Rp 0</span></div>
         <div class="result-item total"><span>Total Tagihan:</span><span id="resTotal">Rp 0</span></div>
     </div>
 </div>
+
 <script>
-    // Memasukkan rate kurs sesuai request pembeli
     const defaultRates = { 
         KRW: 12.8, 
         CNY: 2640.0, 
         JPY: 112.0, 
         THB: 540.0 
     };
-    function updateDefaultRate() { const currency = document.getElementById('currency').value; document.getElementById('rate').value = defaultRates[currency]; }
-    function formatRupiah(angka) { return "Rp " + Math.round(angka).toLocaleString('id-ID'); }
+    
+    function updateDefaultRate() { 
+        const currency = document.getElementById('currency').value; 
+        document.getElementById('rate').value = defaultRates[currency]; 
+    }
+    
+    function formatRupiah(angka) { 
+        return "Rp " + Math.round(angka).toLocaleString('id-ID'); 
+    }
+    
     function hitungTotal() {
-        const customerName = document.getElementById('customerName').value.trim();
-        const itemName = document.getElementById('itemName').value.trim();
         const price = parseFloat(document.getElementById('price').value) || 0;
         const rate = parseFloat(document.getElementById('rate').value) || 0;
         const goFee = parseFloat(document.getElementById('goFee').value) || 0;
-        const shipping = parseFloat(document.getElementById('shipping').value) || 0;
-        if (price === 0) { alert("Harap masukkan harga barang terlebih dahulu!"); return; }
-        const hargaKonversi = price * rate; const hargaTotal = hargaKonversi + goFee + shipping;
-        if (customerName !== "") { document.getElementById('resHeader').innerText = "RINCIAN PESANAN: " + customerName.toUpperCase(); } else { document.getElementById('resHeader').innerText = "RINCIAN PESANAN"; }
-        if (itemName !== "") { document.getElementById('resItemName').innerText = itemName; } else { document.getElementById('resItemName').innerText = "Barang GO"; }
+        
+        if (price === 0) { 
+            alert("Harap masukkan harga barang terlebih dahulu!"); 
+            return; 
+        }
+        
+        const hargaKonversi = price * rate; 
+        const hargaTotal = hargaKonversi + goFee;
+        
         document.getElementById('resRawPrice').innerText = formatRupiah(hargaKonversi);
         document.getElementById('resFee').innerText = formatRupiah(goFee);
-        document.getElementById('resShipping').innerText = formatRupiah(shipping);
         document.getElementById('resTotal').innerText = formatRupiah(hargaTotal);
         document.getElementById('resultBox').style.display = 'block';
     }
+    
     updateDefaultRate();
 </script>
 </body>
