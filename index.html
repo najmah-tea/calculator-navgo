@@ -133,6 +133,12 @@
             color: #555555;
             font-weight: bold;
         }
+        .info-format {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 2px;
+            display: block;
+        }
 
         /* Layar Rincian Hasil (Cyber Solar Screen) */
         .layar-solar {
@@ -246,9 +252,10 @@
             <div class="grup-input">
                 <label id="label-harga">Item Price (₩)</label>
                 <div class="wrapper-input">
-                    <input type="number" id="hargaBarang" value="0" oninput="prosesKalkulasi()">
+                    <input type="number" id="hargaBarang" value="0" step="0.1" oninput="prosesKalkulasi()">
                     <span class="simbol-matauang" id="simbol-harga">₩</span>
                 </div>
+                <span class="info-format" id="info-format-harga">*Contoh: ketik 0.1 untuk 1,000₩</span>
             </div>
 
             <div class="grup-input">
@@ -268,11 +275,12 @@
             </div>
 
             <div class="grup-input">
-                <label>Domestic Shipping (IDR)</label>
+                <label id="label-domestik">Dom. Shipping (₩)</label>
                 <div class="wrapper-input">
-                    <input type="number" id="domesticShipping" value="0" oninput="prosesKalkulasi()">
-                    <span class="simbol-matauang">Rp</span>
+                    <input type="number" id="domesticShipping" value="0" step="0.1" oninput="prosesKalkulasi()">
+                    <span class="simbol-matauang" id="simbol-domestik">₩</span>
                 </div>
+                <span class="info-format" id="info-format-domestik">*Contoh: ketik 0.3 untuk 3,000₩</span>
             </div>
 
             <div class="layar-solar">
@@ -317,7 +325,6 @@
     <div class="footer-tag">🏡 JAKTIM OPERATIONAL • © 2026</div>
 
 <script>
-    // Setelan data dasar & simbol mata uang asing
     const datasetKurs = {
         KRW: { rate: 12.8, sym: '₩', apiCode: 'KRW' },
         CNY: { rate: 2640.0, sym: '¥', apiCode: 'CNY' },
@@ -327,7 +334,6 @@
 
     let mataUangAktif = 'KRW';
 
-    // FUNGSI UTAMA: Mengambil data Kurs Asli secara live dari Bank Internasional
     async function fetchLiveRates() {
         try {
             const response = await fetch('https://open.er-api.com/v6/latest/IDR');
@@ -336,28 +342,24 @@
             const data = await response.json();
             const rates = data.rates;
 
-            // Karena base-nya IDR, rumusnya adalah: 1 / rate_mata_uang_asing
-            // Kita beri tambahan sedikit margin/poin (contoh: +0.5 untuk KRW, +60 untuk CNY) agar sesuai rate toko GO kamu
             datasetKurs.KRW.rate = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
             datasetKurs.CNY.rate = Math.round(1 / rates.CNY) + 60;
             datasetKurs.JPY.rate = Math.round(1 / rates.JPY) + 3;
             datasetKurs.THB.rate = Math.round(1 / rates.THB) + 15;
 
             document.getElementById('status-api').innerText = "LIVE RATES: UPDATED TODAY";
-            document.getElementById('indicator-light').style.background = "#00d2ff"; // Ganti jadi Cyan/Sukses
+            document.getElementById('indicator-light').style.background = "#00d2ff";
             
-            // Set nilai awal input rate sesuai mata uang yang aktif setelah load data
             document.getElementById('nilaiRate').value = datasetKurs[mataUangAktif].rate;
             prosesKalkulasi();
 
         } catch (error) {
             console.log('Gagal memuat kurs live, menggunakan data cadangan toko.', error);
             document.getElementById('status-api').innerText = "OFFLINE RATES: USING SHOP BACKUP";
-            document.getElementById('indicator-light').style.background = "#ff3b30"; // Merah cadangan
+            document.getElementById('indicator-light').style.background = "#ff3b30"; 
         }
     }
 
-    // Berpindah mata uang dan memperbarui visual
     function gantiMataUang(opsi) {
         mataUangAktif = opsi;
         
@@ -365,34 +367,51 @@
         document.getElementById('tab-' + opsi).classList.add('active');
         
         document.getElementById('nilaiRate').value = datasetKurs[opsi].rate;
+        
         document.getElementById('label-harga').innerText = `Item Price (${datasetKurs[opsi].sym})`;
         document.getElementById('simbol-harga').innerText = datasetKurs[opsi].sym;
+        
+        document.getElementById('label-domestik').innerText = `Dom. Shipping (${datasetKurs[opsi].sym})`;
+        document.getElementById('simbol-domestik').innerText = datasetKurs[opsi].sym;
+
+        // Atur panduan petunjuk teks kecil di bawah form input
+        if (opsi === 'KRW') {
+            document.getElementById('info-format-harga').innerText = "*Contoh: ketik 0.1 untuk 1,000₩";
+            document.getElementById('info-format-domestik').innerText = "*Contoh: ketik 0.3 untuk 3,000₩";
+        } else {
+            document.getElementById('info-format-harga').innerText = "*Masukkan nominal angka normal";
+            document.getElementById('info-format-domestik').innerText = "*Masukkan nominal angka normal";
+        }
         
         prosesKalkulasi();
     }
 
-    // Mengubah angka biasa jadi ribuan agar pas di layar arcade
     function formatMataUang(nilai) {
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Kalkulasi otomatis berjalan tanpa tombol hitung tambahan
     function prosesKalkulasi() {
-        const harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
+        let harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
         const rate = parseFloat(document.getElementById('nilaiRate').value) || 0;
         const fee = parseFloat(document.getElementById('feeGo').value) || 0;
-        const domestic = parseFloat(document.getElementById('domesticShipping').value) || 0;
+        let domesticVal = parseFloat(document.getElementById('domesticShipping').value) || 0;
 
-        const totalKonversi = harga * rate;
-        const totalAkhir = totalKonversi + fee + domestic;
+        // JIKA KOREA (KRW): Ubah input desimal (0.1) ke bentuk ribuan asli (1000) secara otomatis
+        if (mataUangAktif === 'KRW') {
+            harga = harga * 10000;
+            domesticVal = domesticVal * 10000;
+        }
 
-        document.getElementById('hasilKonversi').innerText = formatMataUang(totalKonversi);
+        const totalKonversiBarang = harga * rate;
+        const totalKonversiDomestic = domesticVal * rate;
+        const totalAkhir = totalKonversiBarang + fee + totalKonversiDomestic;
+
+        document.getElementById('hasilKonversi').innerText = formatMataUang(totalKonversiBarang);
         document.getElementById('hasilFee').innerText = formatMataUang(fee);
-        document.getElementById('hasilDomestic').innerText = formatMataUang(domestic);
+        document.getElementById('hasilDomestic').innerText = formatMataUang(totalKonversiDomestic);
         document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhir);
     }
 
-    // Mengembalikan nilai ke kondisi default awal
     function resetSistem() {
         document.getElementById('hargaBarang').value = 0;
         document.getElementById('feeGo').value = 15000;
@@ -400,7 +419,6 @@
         gantiMataUang('KRW');
     }
 
-    // Jalankan pengambilan data kurs harian saat pertama kali web dibuka
     fetchLiveRates();
 </script>
 </body>
