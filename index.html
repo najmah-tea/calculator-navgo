@@ -259,14 +259,6 @@
             </div>
 
             <div class="grup-input">
-                <label>Fee Jasa GO (IDR)</label>
-                <div class="wrapper-input">
-                    <input type="number" id="feeGo" value="15000" oninput="prosesKalkulasi()">
-                    <span class="simbol-matauang">Rp</span>
-                </div>
-            </div>
-
-            <div class="grup-input">
                 <label id="label-domestik">Dom. Shipping (₩)</label>
                 <div class="wrapper-input">
                     <input type="number" id="domesticShipping" value="0" step="0.1" oninput="prosesKalkulasi()">
@@ -325,6 +317,8 @@
         THB: { rate: 540.0, sym: '฿', apiCode: 'THB' }
     };
 
+    // Nilai Kunci Jasa Fixed Rp 15.000
+    const FEE_GO_FIXED = 15000;
     let mataUangAktif = 'KRW';
 
     // Mengambil data Kurs Asli secara live & otomatis ditambahkan margin toko
@@ -336,21 +330,21 @@
             const data = await response.json();
             const rates = data.rates;
 
-            // Tambahan margin pengaman/poin untuk rate toko kamu (+0.5, +60, +3, +15)
+            // Tambahan margin pengaman/poin untuk rate toko kamu
             datasetKurs.KRW.rate = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
             datasetKurs.CNY.rate = Math.round(1 / rates.CNY) + 60;
             datasetKurs.JPY.rate = Math.round(1 / rates.JPY) + 3;
             datasetKurs.THB.rate = Math.round(1 / rates.THB) + 15;
 
             document.getElementById('status-api').innerText = "LIVE RATES: UPDATED TODAY";
-            document.getElementById('indicator-light').style.background = "#00d2ff"; // Cyan glow sukses
+            document.getElementById('indicator-light').style.background = "#00d2ff";
             
             prosesKalkulasi();
 
         } catch (error) {
             console.log('Gagal memuat kurs live, menggunakan data cadangan toko.', error);
             document.getElementById('status-api').innerText = "OFFLINE RATES: USING SHOP BACKUP";
-            document.getElementById('indicator-light').style.background = "#ff3b30"; // Merah backup
+            document.getElementById('indicator-light').style.background = "#ff3b30";
         }
     }
 
@@ -361,15 +355,12 @@
         document.querySelectorAll('.btn-kurs').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + opsi).classList.add('active');
         
-        // Update Label & Simbol Input Harga Barang
         document.getElementById('label-harga').innerText = `Item Price (${datasetKurs[opsi].sym})`;
         document.getElementById('simbol-harga').innerText = datasetKurs[opsi].sym;
         
-        // Update Label & Simbol Input Domestic Shipping
         document.getElementById('label-domestik').innerText = `Dom. Shipping (${datasetKurs[opsi].sym})`;
         document.getElementById('simbol-domestik').innerText = datasetKurs[opsi].sym;
 
-        // Atur teks petunjuk format input
         if (opsi === 'KRW') {
             document.getElementById('info-format-harga').innerText = "*Contoh: ketik 0.1 untuk 1,000₩";
             document.getElementById('info-format-domestik').innerText = "*Contoh: ketik 0.3 untuk 3,000₩";
@@ -386,16 +377,14 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Kalkulasi otomatis berjalan di balik layar menggunakan internal rate
+    // Kalkulasi otomatis berjalan di balik layar
     function prosesKalkulasi() {
         let harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
         let domesticVal = parseFloat(document.getElementById('domesticShipping').value) || 0;
-        const fee = parseFloat(document.getElementById('feeGo').value) || 0;
         
-        // Mengambil rate yang aktif di dalam data internal sistem
         const rateAktif = datasetKurs[mataUangAktif].rate;
 
-        // JIKA KOREA (KRW): Ubah format input desimal kelipatan (0.1) ke bentuk ribuan (1000)
+        // JIKA KOREA (KRW): Ubah format desimal kelipatan (0.1) ke bentuk ribuan (1000)
         if (mataUangAktif === 'KRW') {
             harga = harga * 10000;
             domesticVal = domesticVal * 10000;
@@ -403,10 +392,12 @@
 
         const totalKonversiBarang = harga * rateAktif;
         const totalKonversiDomestic = domesticVal * rateAktif;
-        const totalAkhir = totalKonversiBarang + fee + totalKonversiDomestic;
+        
+        // Menggunakan variabel internal FEE_GO_FIXED (15000)
+        const totalAkhir = totalKonversiBarang + FEE_GO_FIXED + totalKonversiDomestic;
 
         document.getElementById('hasilKonversi').innerText = formatMataUang(totalKonversiBarang);
-        document.getElementById('hasilFee').innerText = formatMataUang(fee);
+        document.getElementById('hasilFee').innerText = formatMataUang(FEE_GO_FIXED);
         document.getElementById('hasilDomestic').innerText = formatMataUang(totalKonversiDomestic);
         document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhir);
     }
@@ -414,7 +405,6 @@
     // Reset data form input
     function resetSistem() {
         document.getElementById('hargaBarang').value = 0;
-        document.getElementById('feeGo').value = 15000;
         document.getElementById('domesticShipping').value = 0;
         gantiMataUang('KRW');
     }
