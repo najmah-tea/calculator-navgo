@@ -267,6 +267,14 @@
                 <span class="info-format" id="info-format-domestik">*Contoh: ketik 0.3 untuk 3,000₩</span>
             </div>
 
+            <div class="grup-input">
+                <label>Split People</label>
+                <div class="wrapper-input">
+                    <input type="number" id="splitPeople" value="1" min="1" oninput="prosesKalkulasi()">
+                    <span class="simbol-matauang">👤</span>
+                </div>
+            </div>
+
             <div class="layar-solar">
                 <div class="header-solar">
                     <span>LIVE RATE DATA</span>
@@ -317,7 +325,7 @@
         THB: { rate: 540.0, sym: '฿', apiCode: 'THB' }
     };
 
-    // Nilai Kunci Jasa Fixed Rp 15.000
+    // Nilai Kunci Jasa Tetap Rp 15.000
     const FEE_GO_FIXED = 15000;
     let mataUangAktif = 'KRW';
 
@@ -377,11 +385,15 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Kalkulasi otomatis berjalan di balik layar
+    // Kalkulasi otomatis dengan pembagian Split People
     function prosesKalkulasi() {
         let harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
         let domesticVal = parseFloat(document.getElementById('domesticShipping').value) || 0;
+        let pembagi = parseInt(document.getElementById('splitPeople').value) || 1;
         
+        // Memastikan pembagi minimal adalah 1 orang
+        if (pembagi < 1) pembagi = 1;
+
         const rateAktif = datasetKurs[mataUangAktif].rate;
 
         // JIKA KOREA (KRW): Ubah format desimal kelipatan (0.1) ke bentuk ribuan (1000)
@@ -390,22 +402,29 @@
             domesticVal = domesticVal * 10000;
         }
 
-        const totalKonversiBarang = harga * rateAktif;
-        const totalKonversiDomestic = domesticVal * rateAktif;
-        
-        // Menggunakan variabel internal FEE_GO_FIXED (15000)
-        const totalAkhir = totalKonversiBarang + FEE_GO_FIXED + totalKonversiDomestic;
+        // Hitung total rupiah sebelum di-split
+        const totalRupiahBarang = harga * rateAktif;
+        const totalRupiahDomestic = domesticVal * rateAktif;
 
-        document.getElementById('hasilKonversi').innerText = formatMataUang(totalKonversiBarang);
+        // Bagi hasil konversi barang & ongkir domestik sesuai jumlah orang
+        const hasilBagiBarang = totalRupiahBarang / pembagi;
+        const hasilBagiDomestic = totalRupiahDomestic / pembagi;
+        
+        // Total per orang = (Harga barang terbagi) + Fee Tetap + (Ongkir terbagi)
+        const totalAkhirPerOrang = hasilBagiBarang + FEE_GO_FIXED + hasilBagiDomestic;
+
+        // Tampilkan hasil pembagian ke dalam layar LCD
+        document.getElementById('hasilKonversi').innerText = formatMataUang(hasilBagiBarang);
         document.getElementById('hasilFee').innerText = formatMataUang(FEE_GO_FIXED);
-        document.getElementById('hasilDomestic').innerText = formatMataUang(totalKonversiDomestic);
-        document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhir);
+        document.getElementById('hasilDomestic').innerText = formatMataUang(hasilBagiDomestic);
+        document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhirPerOrang);
     }
 
     // Reset data form input
     function resetSistem() {
         document.getElementById('hargaBarang').value = 0;
         document.getElementById('domesticShipping').value = 0;
+        document.getElementById('splitPeople').value = 1;
         gantiMataUang('KRW');
     }
 
