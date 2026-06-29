@@ -317,12 +317,12 @@
     <div class="footer-tag">🏡 JAKTIM OPERATIONAL • © 2026</div>
 
 <script>
-    // Data cadangan dasar (Backup Shop Rates)
+    // Data cadangan dasar (Backup Shop Rates) - THB SUDAH UPDATE 555
     const datasetKurs = {
         KRW: { rate: 12.8, sym: '₩', apiCode: 'KRW' },
         CNY: { rate: 2640.0, sym: '¥', apiCode: 'CNY' },
         JPY: { rate: 112.0, sym: '¥', apiCode: 'JPY' },
-        THB: { rate: 540.0, sym: '฿', apiCode: 'THB' }
+        THB: { rate: 555.0, sym: '฿', apiCode: 'THB' }
     };
 
     // Nilai Kunci Jasa Tetap Rp 15.000
@@ -342,7 +342,9 @@
             datasetKurs.KRW.rate = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
             datasetKurs.CNY.rate = Math.round(1 / rates.CNY) + 60;
             datasetKurs.JPY.rate = Math.round(1 / rates.JPY) + 3;
-            datasetKurs.THB.rate = Math.round(1 / rates.THB) + 15;
+            
+            // Penyesuaian margin agar stabil di kisaran angka 555 mengikuti pergerakan pasar terbaru
+            datasetKurs.THB.rate = Math.round(1 / rates.THB) + 18;
 
             document.getElementById('status-api').innerText = "LIVE RATES: UPDATED TODAY";
             document.getElementById('indicator-light').style.background = "#00d2ff";
