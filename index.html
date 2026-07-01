@@ -317,19 +317,27 @@
     <div class="footer-tag">🏡 JAKTIM OPERATIONAL • © 2026</div>
 
 <script>
-    // Data cadangan dasar (Backup Shop Rates) - THB DI-SET KE 560 (DI ATAS 555)
+    // Batas Minimum Rate Toko Aman (Biar tidak tekor saat live harian turun)
+    const MIN_SHOP_RATES = {
+        KRW: 12.8,
+        CNY: 2640.0,
+        JPY: 112.0,
+        THB: 560.0 // Terkunci aman di atas 555
+    };
+
+    // Objek penampung dataset kurs aktif
     const datasetKurs = {
-        KRW: { rate: 12.8, sym: '₩', apiCode: 'KRW' },
-        CNY: { rate: 2640.0, sym: '¥', apiCode: 'CNY' },
-        JPY: { rate: 112.0, sym: '¥', apiCode: 'JPY' },
-        THB: { rate: 560.0, sym: '฿', apiCode: 'THB' }
+        KRW: { rate: MIN_SHOP_RATES.KRW, sym: '₩', apiCode: 'KRW' },
+        CNY: { rate: MIN_SHOP_RATES.CNY, sym: '¥', apiCode: 'CNY' },
+        JPY: { rate: MIN_SHOP_RATES.JPY, sym: '¥', apiCode: 'JPY' },
+        THB: { rate: MIN_SHOP_RATES.THB, sym: '฿', apiCode: 'THB' }
     };
 
     // Nilai Kunci Jasa Tetap Rp 15.000
     const FEE_GO_FIXED = 15000;
     let mataUangAktif = 'KRW';
 
-    // Mengambil data Kurs Asli secara live & otomatis ditambahkan margin toko
+    // Mengambil data Kurs Asli secara live harian & digabung batas aman toko
     async function fetchLiveRates() {
         try {
             const response = await fetch('https://open.er-api.com/v6/latest/IDR');
@@ -338,13 +346,21 @@
             const data = await response.json();
             const rates = data.rates;
 
-            // Tambahan margin pengaman/poin untuk rate toko kamu
-            datasetKurs.KRW.rate = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
-            datasetKurs.CNY.rate = Math.round(1 / rates.CNY) + 60;
-            datasetKurs.JPY.rate = Math.round(1 / rates.JPY) + 3;
+            // 1. Hitung KRW Live + Margin
+            const liveKRW = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
+            datasetKurs.KRW.rate = Math.max(liveKRW, MIN_SHOP_RATES.KRW);
+
+            // 2. Hitung CNY Live + Margin
+            const liveCNY = Math.round(1 / rates.CNY) + 60;
+            datasetKurs.CNY.rate = Math.max(liveCNY, MIN_SHOP_RATES.CNY);
+
+            // 3. Hitung JPY Live + Margin
+            const liveJPY = Math.round(1 / rates.JPY) + 3;
+            datasetKurs.JPY.rate = Math.max(liveJPY, MIN_SHOP_RATES.JPY);
             
-            // Penyesuaian margin tambahan agar rate live otomatis berada di kisaran 560+ (di atas 555)
-            datasetKurs.THB.rate = Math.round(1 / rates.THB) + 23;
+            // 4. Hitung THB Live + Margin (Diproteksi penuh agar tidak bisa jebol di bawah batas minimum 560)
+            const liveTHB = Math.round(1 / rates.THB) + 23;
+            datasetKurs.THB.rate = Math.max(liveTHB, MIN_SHOP_RATES.THB);
 
             document.getElementById('status-api').innerText = "LIVE RATES: UPDATED TODAY";
             document.getElementById('indicator-light').style.background = "#00d2ff";
