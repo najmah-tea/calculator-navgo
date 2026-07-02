@@ -268,7 +268,7 @@
             </div>
 
             <div class="grup-input">
-                <label>Split People</label>
+                <label>Split People / Slot</label>
                 <div class="wrapper-input">
                     <input type="number" id="splitPeople" value="1" min="1" oninput="prosesKalkulasi()">
                     <span class="simbol-matauang">👤</span>
@@ -289,7 +289,7 @@
                 </div>
                 <div class="baris-solar">
                     <span>GO FEE:</span>
-                    <span id="hasilFee">15.000</span>
+                    <span id="hasilFee">30.000</span>
                 </div>
                 <div class="baris-solar">
                     <span>DOM SHIP:</span>
@@ -297,7 +297,7 @@
                 </div>
                 <div class="baris-solar totalan">
                     <span>TOTAL:</span>
-                    <span id="hasilTotal">15.000</span>
+                    <span id="hasilTotal">30.000</span>
                 </div>
                 <span id="status-api">LOADING LIVE RATES...</span>
             </div>
@@ -333,8 +333,6 @@
         THB: { rate: MIN_SHOP_RATES.THB, sym: '฿', apiCode: 'THB' }
     };
 
-    // Nilai Kunci Jasa Tetap Rp 15.000
-    const FEE_GO_FIXED = 15000;
     let mataUangAktif = 'KRW';
 
     // Mengambil data Kurs Asli secara live harian & digabung batas aman toko
@@ -403,7 +401,18 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Kalkulasi otomatis dengan pembagian Split People
+    // Fungsi tambahan untuk mendapatkan besaran GO FEE berdasarkan jumlah partisipan/slot
+    function dapatkanFeeDinamis(jumlahSlot) {
+        if (jumlahSlot <= 1) return 30000; // 1 orang dicoret = Beban Maksimal Rp 30.000
+        if (jumlahSlot === 2) return 27000;
+        if (jumlahSlot === 3) return 24000;
+        if (jumlahSlot === 4) return 21000;
+        if (jumlahSlot === 5) return 19000;
+        if (jumlahSlot === 6) return 17000;
+        return 15000;                      // 7 orang ke atas (Full) = Rp 15.000
+    }
+
+    // Kalkulasi otomatis dengan pembagian Split People & GO FEE Dinamis
     function prosesKalkulasi() {
         let harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
         let domesticVal = parseFloat(document.getElementById('domesticShipping').value) || 0;
@@ -428,12 +437,15 @@
         const hasilBagiBarang = totalRupiahBarang / pembagi;
         const hasilBagiDomestic = totalRupiahDomestic / pembagi;
         
-        // Total per orang = (Harga barang terbagi) + Fee Tetap + (Ongkir terbagi)
-        const totalAkhirPerOrang = hasilBagiBarang + FEE_GO_FIXED + hasilBagiDomestic;
+        // AMBIL FEE DINAMIS: Otomatis berubah berdasarkan jumlah pembagi (splitPeople)
+        const feeAktifPerOrang = dapatkanFeeDinamis(pembagi);
+        
+        // Total per orang = (Harga barang terbagi) + Fee Dinamis + (Ongkir terbagi)
+        const totalAkhirPerOrang = hasilBagiBarang + feeAktifPerOrang + hasilBagiDomestic;
 
         // Tampilkan hasil pembagian ke dalam layar LCD
         document.getElementById('hasilKonversi').innerText = formatMataUang(hasilBagiBarang);
-        document.getElementById('hasilFee').innerText = formatMataUang(FEE_GO_FIXED);
+        document.getElementById('hasilFee').innerText = formatMataUang(feeAktifPerOrang);
         document.getElementById('hasilDomestic').innerText = formatMataUang(hasilBagiDomestic);
         document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhirPerOrang);
     }
