@@ -320,9 +320,9 @@
     // Batas Minimum Rate Toko Aman (Biar tidak tekor saat live harian turun)
     const MIN_SHOP_RATES = {
         KRW: 12.8,
-        CNY: 2640.0,
+        CNY: 2700.0, // Diperbarui dari 2640.0 menjadi 2700.0 sesuai permintaan
         JPY: 112.0,
-        THB: 560.0 // Terkunci aman di atas 555
+        THB: 560.0 
     };
 
     // Objek penampung dataset kurs aktif
@@ -348,7 +348,7 @@
             const liveKRW = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
             datasetKurs.KRW.rate = Math.max(liveKRW, MIN_SHOP_RATES.KRW);
 
-            // 2. Hitung CNY Live + Margin
+            // 2. Hitung CNY Live + Margin (Disesuaikan agar minimal berada di batas 2700)
             const liveCNY = Math.round(1 / rates.CNY) + 60;
             datasetKurs.CNY.rate = Math.max(liveCNY, MIN_SHOP_RATES.CNY);
 
@@ -356,7 +356,7 @@
             const liveJPY = Math.round(1 / rates.JPY) + 3;
             datasetKurs.JPY.rate = Math.max(liveJPY, MIN_SHOP_RATES.JPY);
             
-            // 4. Hitung THB Live + Margin (Diproteksi penuh agar tidak bisa jebol di bawah batas minimum 560)
+            // 4. Hitung THB Live + Margin
             const liveTHB = Math.round(1 / rates.THB) + 23;
             datasetKurs.THB.rate = Math.max(liveTHB, MIN_SHOP_RATES.THB);
 
@@ -403,13 +403,13 @@
 
     // Fungsi tambahan untuk mendapatkan besaran GO FEE berdasarkan jumlah partisipan/slot
     function dapatkanFeeDinamis(jumlahSlot) {
-        if (jumlahSlot <= 1) return 30000; // 1 orang dicoret = Beban Maksimal Rp 30.000
+        if (jumlahSlot <= 1) return 30000; 
         if (jumlahSlot === 2) return 27000;
         if (jumlahSlot === 3) return 24000;
         if (jumlahSlot === 4) return 21000;
         if (jumlahSlot === 5) return 19000;
         if (jumlahSlot === 6) return 17000;
-        return 15000;                      // 7 orang ke atas (Full) = Rp 15.000
+        return 15000;                      
     }
 
     // Kalkulasi otomatis dengan pembagian Split People & GO FEE Dinamis
