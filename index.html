@@ -55,7 +55,7 @@
             border-radius: 24px;
             box-shadow: inset -5px -5px 0px #070d22, inset 5px 5px 0px #1e3575, 0 12px 30px rgba(15, 28, 63, 0.3);
             width: 100%;
-            max-width: 350px;
+            max-width: 380px; /* Sedikit diperlebar untuk menampung 5 tombol mata uang */
             box-sizing: border-box;
             border: 4px solid #070d22;
         }
@@ -72,15 +72,15 @@
         /* Grid Pilihan Mata Uang (Tabs) */
         .tabs-matauang {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
+            grid-template-columns: repeat(5, 1fr); /* Diubah ke 5 kolom untuk PHP */
+            gap: 4px;
             margin-bottom: 18px;
         }
         .btn-kurs {
             font-family: 'VT323', monospace;
             background: #ffffff;
             border: 3px solid #000000;
-            font-size: 20px;
+            font-size: 18px; /* Sedikit dikecilkan agar pas 5 tombol */
             font-weight: bold;
             padding: 6px 0;
             cursor: pointer;
@@ -247,6 +247,7 @@
                 <button class="btn-kurs" id="tab-CNY" onclick="gantiMataUang('CNY')">CNY</button>
                 <button class="btn-kurs" id="tab-JPY" onclick="gantiMataUang('JPY')">JPY</button>
                 <button class="btn-kurs" id="tab-THB" onclick="gantiMataUang('THB')">THB</button>
+                <button class="btn-kurs" id="tab-PHP" onclick="gantiMataUang('PHP')">PHP</button>
             </div>
 
             <div class="grup-input">
@@ -319,10 +320,11 @@
 <script>
     // Batas Minimum Rate Toko Aman (Biar tidak tekor saat live harian turun)
     const MIN_SHOP_RATES = {
-        KRW: 12.8,
-        CNY: 2700.0, // Diperbarui dari 2640.0 menjadi 2700.0 sesuai permintaan
+        KRW: 12.34,  // Diperbarui dari 12.8 menjadi 12.34
+        CNY: 2710.0, // Diperbarui dari 2700.0 menjadi 2710.0
         JPY: 112.0,
-        THB: 560.0 
+        THB: 560.0,
+        PHP: 315.0   /* Batas pengaman minimum baru untuk Peso Filipina */
     };
 
     // Objek penampung dataset kurs aktif
@@ -330,7 +332,8 @@
         KRW: { rate: MIN_SHOP_RATES.KRW, sym: '₩', apiCode: 'KRW' },
         CNY: { rate: MIN_SHOP_RATES.CNY, sym: '¥', apiCode: 'CNY' },
         JPY: { rate: MIN_SHOP_RATES.JPY, sym: '¥', apiCode: 'JPY' },
-        THB: { rate: MIN_SHOP_RATES.THB, sym: '฿', apiCode: 'THB' }
+        THB: { rate: MIN_SHOP_RATES.THB, sym: '฿', apiCode: 'THB' },
+        PHP: { rate: MIN_SHOP_RATES.PHP, sym: '₱', apiCode: 'PHP' }
     };
 
     let mataUangAktif = 'KRW';
@@ -348,7 +351,7 @@
             const liveKRW = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
             datasetKurs.KRW.rate = Math.max(liveKRW, MIN_SHOP_RATES.KRW);
 
-            // 2. Hitung CNY Live + Margin (Disesuaikan agar minimal berada di batas 2700)
+            // 2. Hitung CNY Live + Margin 
             const liveCNY = Math.round(1 / rates.CNY) + 60;
             datasetKurs.CNY.rate = Math.max(liveCNY, MIN_SHOP_RATES.CNY);
 
@@ -359,6 +362,12 @@
             // 4. Hitung THB Live + Margin
             const liveTHB = Math.round(1 / rates.THB) + 23;
             datasetKurs.THB.rate = Math.max(liveTHB, MIN_SHOP_RATES.THB);
+
+            // 5. Hitung PHP Live + Margin (Menggunakan data harian dengan tambahan pengaman toko)
+            if (rates.PHP) {
+                const livePHP = Math.round(1 / rates.PHP) + 12; // Ditambah margin aman harian
+                datasetKurs.PHP.rate = Math.max(livePHP, MIN_SHOP_RATES.PHP);
+            }
 
             document.getElementById('status-api').innerText = "LIVE RATES: UPDATED TODAY";
             document.getElementById('indicator-light').style.background = "#00d2ff";
@@ -401,7 +410,7 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Fungsi tambahan untuk mendapatkan besaran GO FEE berdasarkan jumlah partisipan/slot
+    // Besaran GO FEE berdasarkan jumlah partisipan/slot (Ekonomi Skala)
     function dapatkanFeeDinamis(jumlahSlot) {
         if (jumlahSlot <= 1) return 30000; 
         if (jumlahSlot === 2) return 27000;
