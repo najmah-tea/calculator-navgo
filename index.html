@@ -7,11 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-konsol: #0f1c3f;
-            --panel-white: #ffffff;
-            --accent-cyan: #00d2ff;
-            --screen-dark: #121824;
-            --text-glow: #00ffff;
+            --bg-konsol: #0f1c3f;      /* Biru Navy Tua dari Logo NAV GO */
+            --panel-white: #ffffff;     /* Putih Bersih */
+            --accent-cyan: #00d2ff;     /* Biru Muda/Cyan Glow dari Logo */
+            --screen-dark: #121824;     /* Warna Layar LCD */
+            --text-glow: #00ffff;       /* Font Neon Cyan */
         }
 
         body {
@@ -25,6 +25,7 @@
             letter-spacing: 1px;
         }
 
+        /* Header Gaya LNGSHOT */
         .brand-header {
             text-align: center;
             margin-bottom: 20px;
@@ -47,6 +48,7 @@
             border: 2px solid var(--accent-cyan);
         }
 
+        /* Kotak Konsol Utama */
         .konsol-card {
             background: var(--bg-konsol);
             padding: 25px 20px;
@@ -58,6 +60,7 @@
             border: 4px solid #070d22;
         }
 
+        /* Panel Putih Bagian Dalam */
         .panel-dalam {
             background: var(--panel-white);
             border: 4px solid #000000;
@@ -66,6 +69,7 @@
             box-shadow: inset 3px 3px 0px rgba(0,0,0,0.05);
         }
 
+        /* Grid Pilihan Mata Uang (Tabs) */
         .tabs-matauang {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -90,6 +94,7 @@
             transform: translate(1px, 1px);
         }
 
+        /* Form Input Baris */
         .grup-input {
             margin-bottom: 14px;
         }
@@ -106,17 +111,17 @@
             display: flex;
             align-items: center;
         }
-        .wrapper-input input, .wrapper-input select {
+        .wrapper-input input {
             width: 100%;
             font-family: 'VT323', monospace;
-            font-size: 22px;
-            padding: 6px 12px;
+            font-size: 24px;
+            padding: 6px 40px 6px 12px;
             border: 3px solid #000000;
             background-color: #f7f9fc;
             box-sizing: border-box;
             color: #000000;
         }
-        .wrapper-input input:focus, .wrapper-input select:focus {
+        .wrapper-input input:focus {
             outline: none;
             background-color: #ffffff;
             border-color: var(--bg-konsol);
@@ -135,6 +140,7 @@
             display: block;
         }
 
+        /* Layar Rincian Hasil */
         .layar-solar {
             background-color: var(--screen-dark);
             border-radius: 8px;
@@ -182,6 +188,7 @@
             display: block;
         }
 
+        /* Bagian Bawah Konsol */
         .kontrol-bawah {
             display: flex;
             justify-content: space-between;
@@ -243,18 +250,6 @@
             </div>
 
             <div class="grup-input">
-                <label>Item Category</label>
-                <div class="wrapper-input">
-                    <select id="kategoriBarang" onchange="prosesKalkulasi()">
-                        <option value="5000">Poca / Inclusions (5k)</option>
-                        <option value="10000">Merch Kecil / Acrylic (10k)</option>
-                        <option value="20000" selected>Album / Merch Sedang (20k)</option>
-                        <option value="30000">Lightstick / Merch Berat (30k)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grup-input">
                 <label id="label-harga">Item Price (₩)</label>
                 <div class="wrapper-input">
                     <input type="number" id="hargaBarang" value="0" step="0.1" oninput="prosesKalkulasi()">
@@ -294,7 +289,7 @@
                 </div>
                 <div class="baris-solar">
                     <span>GO FEE:</span>
-                    <span id="hasilFee">20.000</span>
+                    <span id="hasilFee">30.000</span>
                 </div>
                 <div class="baris-solar">
                     <span>DOM SHIP:</span>
@@ -302,7 +297,7 @@
                 </div>
                 <div class="baris-solar totalan">
                     <span>TOTAL:</span>
-                    <span id="hasilTotal">20.000</span>
+                    <span id="hasilTotal">30.000</span>
                 </div>
                 <span id="status-api">LOADING LIVE RATES...</span>
             </div>
@@ -322,9 +317,10 @@
     <div class="footer-tag">🏡 JAKTIM OPERATIONAL • © 2026</div>
 
 <script>
+    // Batas Minimum Rate Toko Aman
     const MIN_SHOP_RATES = {
-        KRW: 12.77,
-        CNY: 2710.0,
+        KRW: 12.77,  // Diperbarui sesuai permintaan
+        CNY: 2710.0, // Diperbarui sesuai permintaan
         JPY: 112.0,
         THB: 560.0,
         PHP: 315.0   
@@ -404,14 +400,21 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
+    function dapatkanFeeDinamis(jumlahSlot) {
+        if (jumlahSlot <= 1) return 30000; 
+        if (jumlahSlot === 2) return 27000;
+        if (jumlahSlot === 3) return 24000;
+        if (jumlahSlot === 4) return 21000;
+        if (jumlahSlot === 5) return 19000;
+        if (jumlahSlot === 6) return 17000;
+        return 15000;                      
+    }
+
     function prosesKalkulasi() {
         let harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
         let domesticVal = parseFloat(document.getElementById('domesticShipping').value) || 0;
         let pembagi = parseInt(document.getElementById('splitPeople').value) || 1;
         
-        // Ambil nominal GO Fee berdasarkan kategori yang dipilih
-        let feeKategori = parseInt(document.getElementById('kategoriBarang').value) || 20000;
-
         if (pembagi < 1) pembagi = 1;
 
         const rateAktif = datasetKurs[mataUangAktif].rate;
@@ -427,10 +430,12 @@
         const hasilBagiBarang = totalRupiahBarang / pembagi;
         const hasilBagiDomestic = totalRupiahDomestic / pembagi;
         
-        const totalAkhirPerOrang = hasilBagiBarang + feeKategori + hasilBagiDomestic;
+        const feeAktifPerOrang = dapatkanFeeDinamis(pembagi);
+        
+        const totalAkhirPerOrang = hasilBagiBarang + feeAktifPerOrang + hasilBagiDomestic;
 
         document.getElementById('hasilKonversi').innerText = formatMataUang(hasilBagiBarang);
-        document.getElementById('hasilFee').innerText = formatMataUang(feeKategori);
+        document.getElementById('hasilFee').innerText = formatMataUang(feeAktifPerOrang);
         document.getElementById('hasilDomestic').innerText = formatMataUang(hasilBagiDomestic);
         document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhirPerOrang);
     }
@@ -439,7 +444,6 @@
         document.getElementById('hargaBarang').value = 0;
         document.getElementById('domesticShipping').value = 0;
         document.getElementById('splitPeople').value = 1;
-        document.getElementById('kategoriBarang').value = "20000";
         gantiMataUang('KRW');
     }
 
