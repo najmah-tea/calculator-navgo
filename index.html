@@ -289,7 +289,7 @@
                 </div>
                 <div class="baris-solar">
                     <span>GO FEE:</span>
-                    <span id="hasilFee">27.000</span>
+                    <span id="hasilFee">100.000</span>
                 </div>
                 <div class="baris-solar">
                     <span>DOM SHIP:</span>
@@ -297,7 +297,7 @@
                 </div>
                 <div class="baris-solar totalan">
                     <span>TOTAL:</span>
-                    <span id="hasilTotal">27.000</span>
+                    <span id="hasilTotal">100.000</span>
                 </div>
                 <span id="status-api">LOADING LIVE RATES...</span>
             </div>
@@ -399,14 +399,15 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // HITUNGAN LOGIKA CHU-GO (Membagi Total Fee 27k secara adil & halus ke tiap slot)
+    // LOGIKA GO FEE: Mulai 100k, berkurang sesuai slot, minimal 15k
     function dapatkanFeeDinamis(jumlahSlot) {
-        const baseGOFee = 27000; // Ubah angka ini jika fee dasar 1 orang beda
+        const baseGOFee = 100000; 
+        const minGOFee = 15000;
         
         let feePerOrang = baseGOFee / jumlahSlot;
+        let feeDibulatkan = Math.round(feePerOrang / 100) * 100;
         
-        // Dibulatkan ke ratusan terdekat (misal Rp 14.500)
-        return Math.round(feePerOrang / 100) * 100;
+        return Math.max(minGOFee, feeDibulatkan);
     }
 
     function prosesKalkulasi() {
@@ -423,20 +424,22 @@
             domesticVal = domesticVal * 10000;
         }
 
-        const totalRupiahBarang = harga * rateAktif;
+        // HARGA BARANG UTUH (TIDAK DIBAGI)
+        const totalRupiahBarang = harga * rateAktif; 
+        
+        // DOMESTIK DIBAGI SLOT
         const totalRupiahDomestic = domesticVal * rateAktif;
-
-        const hasilBagiBarang = totalRupiahBarang / pembagi;
         const hasilBagiDomestic = totalRupiahDomestic / pembagi;
         
+        // FEE GO BERKURANG SESUAI SLOT (100k s/d 15k)
         const feeAktifPerOrang = dapatkanFeeDinamis(pembagi);
         
-        const totalAkhirPerOrang = hasilBagiBarang + feeAktifPerOrang + hasilBagiDomestic;
+        const totalAkhir = totalRupiahBarang + feeAktifPerOrang + hasilBagiDomestic;
 
-        document.getElementById('hasilKonversi').innerText = formatMataUang(hasilBagiBarang);
+        document.getElementById('hasilKonversi').innerText = formatMataUang(totalRupiahBarang);
         document.getElementById('hasilFee').innerText = formatMataUang(feeAktifPerOrang);
         document.getElementById('hasilDomestic').innerText = formatMataUang(hasilBagiDomestic);
-        document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhirPerOrang);
+        document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhir);
     }
 
     function resetSistem() {
