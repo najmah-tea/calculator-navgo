@@ -317,7 +317,6 @@
     <div class="footer-tag">🏡 JAKTIM OPERATIONAL • © 2026</div>
 
 <script>
-    // Batas Minimum Rate Toko Aman (Rate KRW diubah menjadi 12.80)
     const MIN_SHOP_RATES = {
         KRW: 12.80,  
         CNY: 2710.0,
@@ -400,14 +399,13 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Fungsi Fee Dinamis: Rentang Rp 100.000 (1 slot) s/d Rp 15.000 (6+ slot)
+    // Presisi 1 Rupiah (Total Fee 100k dibagi rata jumlah slot, minimum 15k)
     function dapatkanFeeDinamis(jumlahSlot) {
-        if (jumlahSlot <= 1) return 100000; 
-        if (jumlahSlot === 2) return 70000;
-        if (jumlahSlot === 3) return 50000;
-        if (jumlahSlot === 4) return 35000;
-        if (jumlahSlot === 5) return 25000;
-        return 15000; // 6 slot atau lebih                     
+        if (jumlahSlot <= 1) return 100000;
+        
+        let feePerSlot = 100000 / jumlahSlot;
+        
+        return Math.max(15000, feePerSlot);                     
     }
 
     function prosesKalkulasi() {
