@@ -402,7 +402,7 @@
     // LOGIKA GO FEE: Mulai 100k, berkurang sesuai slot, minimal 15k
     function dapatkanFeeDinamis(jumlahSlot) {
         const baseGOFee = 100000; 
-        const minGOFee = 15000;
+        const minGOFee = 16000;
         
         let feePerOrang = baseGOFee / jumlahSlot;
         let feeDibulatkan = Math.round(feePerOrang / 100) * 100;
