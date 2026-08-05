@@ -289,7 +289,7 @@
                 </div>
                 <div class="baris-solar">
                     <span>GO FEE:</span>
-                    <span id="hasilFee">30.000</span>
+                    <span id="hasilFee">100.000</span>
                 </div>
                 <div class="baris-solar">
                     <span>DOM SHIP:</span>
@@ -297,7 +297,7 @@
                 </div>
                 <div class="baris-solar totalan">
                     <span>TOTAL:</span>
-                    <span id="hasilTotal">30.000</span>
+                    <span id="hasilTotal">100.000</span>
                 </div>
                 <span id="status-api">LOADING LIVE RATES...</span>
             </div>
@@ -317,10 +317,10 @@
     <div class="footer-tag">🏡 JAKTIM OPERATIONAL • © 2026</div>
 
 <script>
-    // Batas Minimum Rate Toko Aman
+    // Batas Minimum Rate Toko Aman (Rate KRW diubah menjadi 12.80)
     const MIN_SHOP_RATES = {
-        KRW: 12.77,  // Diperbarui sesuai permintaan
-        CNY: 2710.0, // Diperbarui sesuai permintaan
+        KRW: 12.80,  
+        CNY: 2710.0,
         JPY: 112.0,
         THB: 560.0,
         PHP: 315.0   
@@ -400,14 +400,14 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
+    // Fungsi Fee Dinamis: Rentang Rp 100.000 (1 slot) s/d Rp 15.000 (6+ slot)
     function dapatkanFeeDinamis(jumlahSlot) {
-        if (jumlahSlot <= 1) return 30000; 
-        if (jumlahSlot === 2) return 27000;
-        if (jumlahSlot === 3) return 24000;
-        if (jumlahSlot === 4) return 21000;
-        if (jumlahSlot === 5) return 19000;
-        if (jumlahSlot === 6) return 17000;
-        return 15000;                      
+        if (jumlahSlot <= 1) return 100000; 
+        if (jumlahSlot === 2) return 70000;
+        if (jumlahSlot === 3) return 50000;
+        if (jumlahSlot === 4) return 35000;
+        if (jumlahSlot === 5) return 25000;
+        return 15000; // 6 slot atau lebih                     
     }
 
     function prosesKalkulasi() {
