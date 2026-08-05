@@ -399,13 +399,17 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Presisi 1 Rupiah (Total Fee 100k dibagi rata jumlah slot, minimum 15k)
+    // Penurunan bertahap dalam kelipatan 100 Rupiah per slot
     function dapatkanFeeDinamis(jumlahSlot) {
         if (jumlahSlot <= 1) return 100000;
         
-        let feePerSlot = 100000 / jumlahSlot;
+        // Ubah angka ini sesuai kebutuhan penurunan kelipatan 100 (misal: 100, 200, 500, atau 1000)
+        const penurunanPerSlot = 100; 
         
-        return Math.max(15000, feePerSlot);                     
+        let fee = 100000 - ((jumlahSlot - 1) * penurunanPerSlot);
+        
+        // Batas minimal fee agar tidak bernilai negatif
+        return Math.max(15000, fee);
     }
 
     function prosesKalkulasi() {
