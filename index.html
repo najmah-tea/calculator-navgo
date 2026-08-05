@@ -289,7 +289,7 @@
                 </div>
                 <div class="baris-solar">
                     <span>GO FEE:</span>
-                    <span id="hasilFee">100.000</span>
+                    <span id="hasilFee">27.000</span>
                 </div>
                 <div class="baris-solar">
                     <span>DOM SHIP:</span>
@@ -297,7 +297,7 @@
                 </div>
                 <div class="baris-solar totalan">
                     <span>TOTAL:</span>
-                    <span id="hasilTotal">100.000</span>
+                    <span id="hasilTotal">27.000</span>
                 </div>
                 <span id="status-api">LOADING LIVE RATES...</span>
             </div>
@@ -399,17 +399,14 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // Penurunan bertahap dalam kelipatan 100 Rupiah per slot
+    // HITUNGAN LOGIKA CHU-GO (Membagi Total Fee 27k secara adil & halus ke tiap slot)
     function dapatkanFeeDinamis(jumlahSlot) {
-        if (jumlahSlot <= 1) return 100000;
+        const baseGOFee = 27000; // Ubah angka ini jika fee dasar 1 orang beda
         
-        // Ubah angka ini sesuai kebutuhan penurunan kelipatan 100 (misal: 100, 200, 500, atau 1000)
-        const penurunanPerSlot = 5000; 
+        let feePerOrang = baseGOFee / jumlahSlot;
         
-        let fee = 100000 - ((jumlahSlot - 1) * penurunanPerSlot);
-        
-        // Batas minimal fee agar tidak bernilai negatif
-        return Math.max(15000, fee);
+        // Dibulatkan ke ratusan terdekat (misal Rp 14.500)
+        return Math.round(feePerOrang / 100) * 100;
     }
 
     function prosesKalkulasi() {
