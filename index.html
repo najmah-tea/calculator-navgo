@@ -315,8 +315,8 @@
     </div>
 
     <div class="footer-tag">🏡 JAKTIM OPERATIONAL • © 2026</div>
-
 <script>
+    // Rate minimum cadangan (jika API offline / gagal loading)
     const MIN_SHOP_RATES = {
         KRW: 12.84,  
         CNY: 2710.0,
@@ -326,15 +326,16 @@
     };
 
     const datasetKurs = {
-        KRW: { rate: MIN_SHOP_RATES.KRW, sym: '₩', apiCode: 'KRW' },
-        CNY: { rate: MIN_SHOP_RATES.CNY, sym: '¥', apiCode: 'CNY' },
-        JPY: { rate: MIN_SHOP_RATES.JPY, sym: '¥', apiCode: 'JPY' },
-        THB: { rate: MIN_SHOP_RATES.THB, sym: '฿', apiCode: 'THB' },
-        PHP: { rate: MIN_SHOP_RATES.PHP, sym: '₱', apiCode: 'PHP' }
+        KRW: { rate: MIN_SHOP_RATES.KRW, sym: '₩' },
+        CNY: { rate: MIN_SHOP_RATES.CNY, sym: '¥' },
+        JPY: { rate: MIN_SHOP_RATES.JPY, sym: '¥' },
+        THB: { rate: MIN_SHOP_RATES.THB, sym: '฿' },
+        PHP: { rate: MIN_SHOP_RATES.PHP, sym: '₱' }
     };
 
     let mataUangAktif = 'KRW';
 
+    // 1. FETCH LIVE RATES UNTUK 5 MATA UANG
     async function fetchLiveRates() {
         try {
             const response = await fetch('https://open.er-api.com/v6/latest/IDR');
@@ -343,22 +344,12 @@
             const data = await response.json();
             const rates = data.rates;
 
-            const liveKRW = parseFloat((1 / rates.KRW).toFixed(2)) + 0.5;
-            datasetKurs.KRW.rate = Math.max(liveKRW, MIN_SHOP_RATES.KRW);
-
-            const liveCNY = Math.round(1 / rates.CNY) + 60;
-            datasetKurs.CNY.rate = Math.max(liveCNY, MIN_SHOP_RATES.CNY);
-
-            const liveJPY = Math.round(1 / rates.JPY) + 3;
-            datasetKurs.JPY.rate = Math.max(liveJPY, MIN_SHOP_RATES.JPY);
-            
-            const liveTHB = Math.round(1 / rates.THB) + 23;
-            datasetKurs.THB.rate = Math.max(liveTHB, MIN_SHOP_RATES.THB);
-
-            if (rates.PHP) {
-                const livePHP = Math.round(1 / rates.PHP) + 12;
-                datasetKurs.PHP.rate = Math.max(livePHP, MIN_SHOP_RATES.PHP);
-            }
+            // Mengambil live rate IDR ke masing-masing mata uang
+            if (rates.KRW) datasetKurs.KRW.rate = Math.max(parseFloat((1 / rates.KRW).toFixed(2)), MIN_SHOP_RATES.KRW);
+            if (rates.CNY) datasetKurs.CNY.rate = Math.max(parseFloat((1 / rates.CNY).toFixed(2)), MIN_SHOP_RATES.CNY);
+            if (rates.JPY) datasetKurs.JPY.rate = Math.max(parseFloat((1 / rates.JPY).toFixed(2)), MIN_SHOP_RATES.JPY);
+            if (rates.THB) datasetKurs.THB.rate = Math.max(parseFloat((1 / rates.THB).toFixed(2)), MIN_SHOP_RATES.THB);
+            if (rates.PHP) datasetKurs.PHP.rate = Math.max(parseFloat((1 / rates.PHP).toFixed(2)), MIN_SHOP_RATES.PHP);
 
             document.getElementById('status-api').innerText = "LIVE RATES: UPDATED TODAY";
             document.getElementById('indicator-light').style.background = "#00d2ff";
@@ -366,8 +357,8 @@
             prosesKalkulasi();
 
         } catch (error) {
-            console.log('Gagal memuat kurs live, menggunakan data cadangan toko.', error);
-            document.getElementById('status-api').innerText = "OFFLINE RATES: USING SHOP BACKUP";
+            console.log('Gagal memuat kurs live, menggunakan rate backup:', error);
+            document.getElementById('status-api').innerText = "OFFLINE RATES: BACKUP USED";
             document.getElementById('indicator-light').style.background = "#ff3b30";
         }
     }
@@ -384,6 +375,7 @@
         document.getElementById('label-domestik').innerText = `Dom. Shipping (${datasetKurs[opsi].sym})`;
         document.getElementById('simbol-domestik').innerText = datasetKurs[opsi].sym;
 
+        // KONTROL TEKS BANTUAN FORMAT INPUT
         if (opsi === 'KRW') {
             document.getElementById('info-format-harga').innerText = "*Contoh: ketik 0.1 untuk 1,000₩";
             document.getElementById('info-format-domestik').innerText = "*Contoh: ketik 0.3 untuk 3,000₩";
@@ -399,46 +391,45 @@
         return Math.round(nilai).toLocaleString('id-ID');
     }
 
-    // LOGIKA GO FEE: Mulai 100k, berkurang sesuai slot, minimal 15k
-    function dapatkanFeeDinamis(jumlahSlot) {
-        const baseGOFee = 30000; 
-        const minGOFee = 12000;
-        
-        let feePerOrang = baseGOFee / jumlahSlot;
-        let feeDibulatkan = Math.round(feePerOrang / 100) * 100;
-        
-        return Math.max(minGOFee, feeDibulatkan);
-    }
-
+    // 2. LOGIKA KALKULASI
     function prosesKalkulasi() {
-        let harga = parseFloat(document.getElementById('hargaBarang').value) || 0;
-        let domesticVal = parseFloat(document.getElementById('domesticShipping').value) || 0;
+        let rawHarga = parseFloat(document.getElementById('hargaBarang').value) || 0;
+        let rawDomestik = parseFloat(document.getElementById('domesticShipping').value) || 0;
         let pembagi = parseInt(document.getElementById('splitPeople').value) || 1;
         
         if (pembagi < 1) pembagi = 1;
 
         const rateAktif = datasetKurs[mataUangAktif].rate;
 
+        let nominalHarga = rawHarga;
+        let nominalDomestik = rawDomestik;
+
+        // KHUSUS KOREA (KRW): 0.1 dikali 10.000 menjadi 1.000
         if (mataUangAktif === 'KRW') {
-            harga = harga * 10000;
-            domesticVal = domesticVal * 10000;
+            nominalHarga = rawHarga * 10000;
+            nominalDomestik = rawDomestik * 10000;
         }
 
-        // HARGA BARANG UTUH (TIDAK DIBAGI)
-        const totalRupiahBarang = harga * rateAktif; 
+        // BASE = Harga Asli * Live Rate
+        const baseRupiah = nominalHarga * rateAktif; 
         
-        // DOMESTIK DIBAGI SLOT
-        const totalRupiahDomestic = domesticVal * rateAktif;
-        const hasilBagiDomestic = totalRupiahDomestic / pembagi;
-        
-        // FEE GO BERKURANG SESUAI SLOT (100k s/d 15k)
-        const feeAktifPerOrang = dapatkanFeeDinamis(pembagi);
-        
-        const totalAkhir = totalRupiahBarang + feeAktifPerOrang + hasilBagiDomestic;
+        // Fee penanganan/admin tetap per transaksi
+        const handlingFeeTetap = 12010; 
 
-        document.getElementById('hasilKonversi').innerText = formatMataUang(totalRupiahBarang);
-        document.getElementById('hasilFee').innerText = formatMataUang(feeAktifPerOrang);
-        document.getElementById('hasilDomestic').innerText = formatMataUang(hasilBagiDomestic);
+        // Ongkir Domestik terbagi per jumlah orang
+        const domShipTotalRupiah = nominalDomestik * rateAktif;
+        const domShipPerOrang = domShipTotalRupiah / pembagi;
+
+        // TOTAL FEES = Handling Fee + Split Dom Ship
+        const totalFees = handlingFeeTetap + domShipPerOrang;
+
+        // TOTAL AKHIR = BASE + FEES
+        const totalAkhir = baseRupiah + totalFees;
+
+        // Display Hasil ke Layar LCD
+        document.getElementById('hasilKonversi').innerText = formatMataUang(baseRupiah);
+        document.getElementById('hasilFee').innerText = formatMataUang(totalFees);
+        document.getElementById('hasilDomestic').innerText = formatMataUang(domShipPerOrang);
         document.getElementById('hasilTotal').innerText = formatMataUang(totalAkhir);
     }
 
@@ -446,10 +437,9 @@
         document.getElementById('hargaBarang').value = 0;
         document.getElementById('domesticShipping').value = 0;
         document.getElementById('splitPeople').value = 1;
-        gantiMataUang('KRW');
+        prosesKalkulasi();
     }
 
+    // Jalankan pertama kali saat halaman dibuka
     fetchLiveRates();
 </script>
-</body>
-</html>
