@@ -318,7 +318,7 @@
 
 <script>
     const MIN_SHOP_RATES = {
-        KRW: 12.84,  
+        KRW: 12.82,  
         CNY: 2710.0,
         JPY: 115.0,
         THB: 556.0,
@@ -401,10 +401,9 @@
 
     // LOGIKA GO FEE: Mulai 100k, berkurang sesuai slot, minimal 15k
     function dapatkanFeeDinamis(jumlahSlot) {
-        const baseGOFee = 20000; 
-        const minGOFee = 12000;
+        const baseGOFee = 30000 s.d 22000;
         
-        let feePerOrang = baseGOFee / jumlahSlot;
+        let feePerOrang = baseGOFee / julahSlot;
         let feeDibulatkan = Math.round(feePerOrang / 100) * 100;
         
         return Math.max(minGOFee, feeDibulatkan);
